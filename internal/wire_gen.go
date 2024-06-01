@@ -20,6 +20,7 @@ import (
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/health_check"
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/metadata"
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/ready_check"
+	"github.com/WildEgor/e-shop-cdn/internal/handlers/replace"
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/ticker"
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/upload"
 	"github.com/WildEgor/e-shop-cdn/internal/handlers/ws_connect"
@@ -50,9 +51,10 @@ func NewServer() (*Server, error) {
 	deleteHandler := delete_handler.NewDeleteHandler(fileRepository, storageAdapter, pubSub)
 	getFilesHandler := get_files_handler.NewGetFilesHandler(fileRepository)
 	metadataHandler := metadata_handler.NewMetadataHandler(storageAdapter)
+	replaceHandler := replace_handler.NewReplaceHandler(fileRepository, storageAdapter, pubSub)
 	apiKeyConfig := configs.NewApiKeyConfig(configurator)
 	apiKeyValidator := services.NewApiKeyValidator(apiKeyConfig)
-	privateRouter := routers.NewPrivateRouter(uploadHandler, deleteHandler, getFilesHandler, metadataHandler, apiKeyValidator)
+	privateRouter := routers.NewPrivateRouter(uploadHandler, deleteHandler, getFilesHandler, metadataHandler, replaceHandler, apiKeyValidator)
 	healthCheckHandler := health_check_handler.NewHealthCheckHandler()
 	readyCheckHandler := ready_check_handler.NewReadyCheckHandler()
 	downloadHandler := download_handler.NewDownloadHandler(storageAdapter)
@@ -68,7 +70,8 @@ func NewServer() (*Server, error) {
 	wsConnectHandler := ws_connect_handler.NewWSConnectHandler(pubSub, subsRepository)
 	wsDisconnectHandler := ws_disconnect_handler.NewWSDisconnectHandler(pubSub)
 	socketRouter := routers.NewSocketRouter(wsHandshakeHandler, subscribeHandler, unsubscribeHandler, tickerHandler, wsConnectHandler, wsDisconnectHandler, hub)
-	server := NewApp(appConfig, loggerConfig, errorsHandler, privateRouter, publicRouter, swaggerRouter, socketRouter, connection, hub)
+	cronService := services.NewCronService(fileRepository, storageAdapter)
+	server := NewApp(appConfig, loggerConfig, errorsHandler, privateRouter, publicRouter, swaggerRouter, socketRouter, connection, hub, cronService)
 	return server, nil
 }
 

@@ -16,10 +16,16 @@ import (
 
 type IFilesRepository interface {
 	RenameFile(oldname, newname string) error
-	DeleteFileById(id string) (*models.FileModel, error)
+	UpdateFile(model *models.FileModel) error
+	FindById(id string) (*models.FileModel, error)
+	RemoveFileById(id string) (*models.FileModel, error)
+	DeleteById(id string) error
 	AddFile(filename string, checksum []byte) (string, error)
 	PaginateFiles(opts *dtos.PaginationOpts) (*models.PaginatedFiles, error)
+	StreamDeletedFiles() <-chan *models.FileModel
 }
+
+var _ IFilesRepository = (*FileRepository)(nil)
 
 type FileRepository struct {
 	coll *mongo.Collection
@@ -34,6 +40,36 @@ func NewFileRepository(
 	return &FileRepository{
 		coll,
 	}
+}
+
+func (r *FileRepository) StreamDeletedFiles() <-chan *models.FileModel {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	out := make(chan *models.FileModel)
+	filter := bson.D{{
+		Key: "status", Value: models.DeletedStatus,
+	}}
+
+	cursor, err := r.coll.Find(ctx, filter)
+	if err != nil {
+	}
+
+	go func() {
+		defer cancel()
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var file models.FileModel
+			if err := cursor.Decode(&file); err != nil {
+				continue
+			}
+
+			out <- &file
+		}
+
+		close(out)
+	}()
+
+	return out
 }
 
 func (r *FileRepository) PaginateFiles(opts *dtos.PaginationOpts) (*models.PaginatedFiles, error) {
@@ -105,7 +141,7 @@ func (r *FileRepository) AddFile(filename string, checksum []byte) (string, erro
 	return model.Name, nil
 }
 
-func (r *FileRepository) DeleteFileById(id string) (*models.FileModel, error) {
+func (r *FileRepository) RemoveFileById(id string) (*models.FileModel, error) {
 	_id, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -122,9 +158,17 @@ func (r *FileRepository) DeleteFileById(id string) (*models.FileModel, error) {
 		return nil, err
 	}
 
-	// TODO: mark is_deleted
 	if model != nil {
-		_, err := r.coll.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: model.Id}})
+		update := bson.D{
+			{"$set",
+				bson.D{
+					{"status", models.DeletedStatus},
+					{"updated_at", time.Now().UTC()},
+				},
+			},
+		}
+
+		_, err := r.coll.UpdateOne(context.Background(), filter, update) // TODO: ctx
 		if err != nil {
 			return nil, err
 		}
@@ -142,10 +186,72 @@ func (r *FileRepository) RenameFile(oldname, newname string) error {
 			},
 		},
 	}
+	filter := bson.D{{Key: "file_name", Value: oldname}, {Key: "is_deleted", Value: false}}
 
-	_, err := r.coll.UpdateOne(context.Background(), bson.D{{Key: "file_name", Value: oldname}}, update) // TODO: ctx
+	_, err := r.coll.UpdateOne(context.Background(), filter, update) // TODO: ctx
 	if err != nil {
 		return errors.New(`Mongo error`) // TODO
+	}
+
+	return nil
+}
+
+func (r *FileRepository) UpdateFile(model *models.FileModel) error {
+	filter := bson.D{{Key: "_id", Value: model.Id}, {"status", models.ActiveStatus}}
+
+	update := bson.D{
+		{"$set",
+			bson.D{
+				{"file_name", model.Name},
+				{"checksum", model.CheckSum},
+				{"updated_at", time.Now().UTC()},
+			},
+		},
+	}
+
+	_, err := r.coll.UpdateOne(context.Background(), filter, update) // TODO: ctx
+	if err != nil {
+		return errors.New(`Mongo error`) // TODO
+	}
+
+	return nil
+}
+
+func (r *FileRepository) FindById(id string) (*models.FileModel, error) {
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var model *models.FileModel
+	filter := bson.D{{Key: "_id", Value: _id}, {"status", models.ActiveStatus}}
+
+	if err := r.coll.FindOne(context.TODO(), filter).Decode(&model); err != nil {
+		if errors.As(err, &mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return model, err
+}
+
+func (r *FileRepository) DeleteById(id string) error {
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{
+		{"_id",
+			_id,
+		},
+	}
+
+	_, err = r.coll.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return err
 	}
 
 	return nil

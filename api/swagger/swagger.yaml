@@ -13,28 +13,6 @@ info:
   title: eShopCDN Swagger Doc
   version: "1.0"
 paths:
-  /api/v1/cdn/delete/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: delete file by name
-      parameters:
-      - description: "123"
-        in: header
-        name: x-api-key
-        required: true
-        type: string
-      - description: Filenam
-        in: path
-        name: filename
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses: {}
-      summary: Allow delete file
-      tags:
-      - Files Controller
   /api/v1/cdn/download/{filename}:
     get:
       consumes:
@@ -52,6 +30,50 @@ paths:
       summary: "Allow \t\t\t\t\t\tdownload file"
       tags:
       - Files Controller
+  /api/v1/cdn/file/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: delete file by name
+      parameters:
+      - description: "123"
+        in: header
+        name: x-api-key
+        required: true
+        type: string
+      - description: Filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Allow delete file
+      tags:
+      - Files Controller
+  /api/v1/cdn/file/{id}/replace:
+    post:
+      consumes:
+      - multipart/form-data
+      description: replace file
+      parameters:
+      - description: "123"
+        in: header
+        name: x-api-key
+        required: true
+        type: string
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses: {}
+      summary: Allow to replace file
+      tags:
+      - Upload Controller
   /api/v1/cdn/files:
     post:
       consumes:

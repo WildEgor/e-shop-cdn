@@ -3,6 +3,8 @@ package utils
 import (
 	"errors"
 	"github.com/google/uuid"
+	"io"
+	"mime/multipart"
 	"strings"
 )
 
@@ -57,4 +59,25 @@ func countVal(str string, val string) int {
 	}
 
 	return count
+}
+
+func ReadFileToBuffer(header *multipart.FileHeader) ([]byte, error) {
+	fr, err := header.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer fr.Close()
+	
+	fbuf := make([]byte, 512)
+	for {
+		fbuf = fbuf[:cap(fbuf)]
+		if _, err := fr.Read(fbuf); err != nil {
+			if err != io.EOF {
+				return nil, err
+			}
+		}
+		break
+	}
+
+	return fbuf, err
 }

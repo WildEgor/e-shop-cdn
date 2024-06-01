@@ -19,12 +19,12 @@ func NewMetadataHandler(
 	}
 }
 
-// Show file metadata godoc
-// @Summary Allow get file metadata
-// @Description	show file metadata
+// Handle 			Show file metadata godoc
+// @Summary 		Allow get file metadata
+// @Description		show file metadata
 // @Tags			Files Controller
 // @Accept			json
-// @Produce		json
+// @Produce			json
 // @Param			x-api-key header	string	true	"123"
 // @Param			page	path		string	true	"Filename"
 // @Router			/api/v1/cdn/metadata/{filename} [get]

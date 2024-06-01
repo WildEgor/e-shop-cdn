@@ -44,8 +44,7 @@ func NewS3Storage(config *S3StorageConfig) (*S3Storage, error) {
 		config: config,
 	}
 
-	err = s.Ping()
-	if err != nil {
+	if err = s.Ping(); err != nil {
 		return nil, err
 	}
 
@@ -119,6 +118,8 @@ func (s *S3Storage) Exists(ctx context.Context, objectName string) (bool, error)
 // Ping s3 bucket
 func (s *S3Storage) Ping() error {
 	_, err := s.client.BucketExists(context.Background(), s.config.Bucket)
+
+	// TODO: create bucket
 
 	return err
 }

@@ -12,6 +12,7 @@ import (
 	nfm "github.com/WildEgor/e-shop-cdn/internal/middlewares/not_found"
 	ws_middleware "github.com/WildEgor/e-shop-cdn/internal/middlewares/ws"
 	"github.com/WildEgor/e-shop-cdn/internal/routers"
+	"github.com/WildEgor/e-shop-cdn/internal/services"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -35,6 +36,7 @@ var AppSet = wire.NewSet(
 type Server struct {
 	App       *fiber.App
 	WS        *ws.Hub
+	Cron      *services.CronService
 	Mongo     *mongo.Connection
 	AppConfig *configs.AppConfig
 }
@@ -44,6 +46,11 @@ func (srv *Server) Run(ctx context.Context) {
 	slog.Info("server is listening")
 
 	go srv.WS.Run()
+
+	if err := srv.Cron.Run(); err != nil {
+		slog.Error("unable to start cron")
+		return
+	}
 
 	if err := srv.App.Listen(fmt.Sprintf(":%s", srv.AppConfig.Port)); err != nil {
 		slog.Error("unable to start server")
@@ -56,6 +63,7 @@ func (srv *Server) Shutdown(ctx context.Context) {
 
 	srv.WS.Stop()
 	srv.Mongo.Disconnect()
+	srv.Cron.Stop()
 
 	if err := srv.App.Shutdown(); err != nil {
 		slog.Error("unable to shutdown server")
@@ -75,6 +83,7 @@ func NewApp(
 
 	mongo *mongo.Connection,
 	ws *ws.Hub,
+	cs *services.CronService,
 ) *Server {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: lc.Level,
@@ -114,6 +123,7 @@ func NewApp(
 	return &Server{
 		App:       app,
 		WS:        ws,
+		Cron:      cs,
 		Mongo:     mongo,
 		AppConfig: ac,
 	}

@@ -24,7 +24,32 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/cdn/delete/{id}": {
+        "/api/v1/cdn/download/{filename}": {
+            "get": {
+                "description": "download file by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Files Controller"
+                ],
+                "summary": "Allow \t\t\t\t\t\tdownload file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filenam",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/cdn/file/{id}": {
             "delete": {
                 "description": "delete file by name",
                 "consumes": [
@@ -47,7 +72,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Filenam",
+                        "description": "Filename",
                         "name": "filename",
                         "in": "path",
                         "required": true
@@ -56,25 +81,32 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/api/v1/cdn/download/{filename}": {
-            "get": {
-                "description": "download file by name",
+        "/api/v1/cdn/file/{id}/replace": {
+            "post": {
+                "description": "replace file",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Files Controller"
+                    "Upload Controller"
                 ],
-                "summary": "Allow \t\t\t\t\t\tdownload file",
+                "summary": "Allow to replace file",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filenam",
-                        "name": "filename",
-                        "in": "path",
+                        "description": "123",
+                        "name": "x-api-key",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File",
+                        "name": "file",
+                        "in": "formData",
                         "required": true
                     }
                 ],

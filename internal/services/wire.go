@@ -6,4 +6,5 @@ import (
 
 var ServicesSet = wire.NewSet(
 	NewApiKeyValidator,
+	NewCronService,
 )

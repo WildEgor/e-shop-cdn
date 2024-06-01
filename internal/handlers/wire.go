@@ -8,6 +8,7 @@ import (
 	health_check_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/health_check"
 	metadata_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/metadata"
 	ready_check_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/ready_check"
+	replace_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/replace"
 	ticker_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/ticker"
 	upload_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/upload"
 	ws_connect_handler "github.com/WildEgor/e-shop-cdn/internal/handlers/ws_connect"
@@ -31,6 +32,7 @@ var HandlersSet = wire.NewSet(
 	delete_handler.NewDeleteHandler,
 	metadata_handler.NewMetadataHandler,
 	get_files_handler.NewGetFilesHandler,
+	replace_handler.NewReplaceHandler,
 	sub_handler.NewSubscribeHandler,
 	unsub_handler.NewUnsubscribeHandler,
 	handshake_handler.NewWSHandshakeHandler,

@@ -7,9 +7,9 @@ import (
 	domains "github.com/WildEgor/e-shop-cdn/internal/domain"
 	"github.com/WildEgor/e-shop-cdn/internal/dtos"
 	"github.com/WildEgor/e-shop-cdn/internal/repositories"
+	"github.com/WildEgor/e-shop-cdn/internal/utils"
 	core_dtos "github.com/WildEgor/e-shop-gopack/pkg/core/dtos"
 	"github.com/gofiber/fiber/v2"
-	"io"
 	"sync"
 )
 
@@ -99,25 +99,17 @@ func (h *UploadHandler) Handle(c *fiber.Ctx) error {
 				return
 			}
 
-			fbuf := make([]byte, 512)
-			mu.Lock()
-			for {
-				fbuf = fbuf[:cap(fbuf)]
-				if _, err := fr.Read(fbuf); err != nil {
-					if err == io.EOF {
-						break
-					}
-					r.SetStatus(fiber.StatusInternalServerError)
-					domains.SetFileServeErr(r)
-				}
-
-				break
+			fbuf, err := utils.ReadFileToBuffer(fileWrapper.Data())
+			if err != nil {
+				mu.Lock()
+				defer mu.Unlock()
+				resp.SetStatus(fiber.StatusInternalServerError)
+				domains.SetFileServeErr(resp)
+				return
 			}
-			mu.Unlock()
 
 			checksum := md5.Sum(fbuf)
 			ofn, err := h.fr.AddFile(fileWrapper.FullPath(), checksum[:])
-
 			if err != nil {
 				mu.Lock()
 				defer mu.Unlock()

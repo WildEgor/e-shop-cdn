@@ -2,6 +2,7 @@ package domains
 
 import (
 	"fmt"
+	"github.com/WildEgor/e-shop-cdn/internal/models"
 	"github.com/WildEgor/e-shop-cdn/internal/utils"
 	"mime/multipart"
 	"slices"
@@ -20,6 +21,14 @@ func WrapFile(catalog string, data *multipart.FileHeader) FileWrapper {
 	return FileWrapper{
 		name,
 		catalog,
+		data,
+	}
+}
+
+func WrapFileModel(model *models.FileModel, data *multipart.FileHeader) FileWrapper {
+	return FileWrapper{
+		model.Name,
+		"",
 		data,
 	}
 }

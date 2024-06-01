@@ -1,6 +1,8 @@
 package dtos
 
-import "errors"
+import (
+	"errors"
+)
 
 // FileResponseDto
 type FileResponseDto struct {
@@ -15,6 +17,18 @@ type FileQueryDto struct {
 func (q FileQueryDto) Validate() error {
 	if q.Filename == "" {
 		return errors.New("empty filename")
+	}
+
+	return nil
+}
+
+type FileIdDto struct {
+	FileId string `json:"id" bson:"id"`
+}
+
+func (q FileIdDto) Validate() error {
+	if q.FileId == "" {
+		return errors.New("empty id")
 	}
 
 	return nil

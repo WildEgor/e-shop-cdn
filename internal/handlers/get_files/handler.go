@@ -19,12 +19,12 @@ func NewGetFilesHandler(
 	}
 }
 
-// Handle Show files godoc
-// @Summary Allow get paginated files
-// @Description	show paginated files
+// Handle 			Show files godoc
+// @Summary 		Allow get paginated files
+// @Description		show paginated files
 // @Tags			Files Controller
 // @Accept			json
-// @Produce		json
+// @Produce			json
 // @Param			x-api-key header	string	true	"123"
 // @Param			page	query		int	false	"Page"
 // @Param			limit	query		int	false	"Page"
