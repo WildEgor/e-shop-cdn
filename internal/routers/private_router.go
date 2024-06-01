@@ -56,8 +56,8 @@ func (r *PrivateRouter) Setup(app *fiber.App) {
 	fc := v1.Group("/cdn")
 
 	fc.Post("/upload", akm, r.uh.Handle)
-	fc.Post("/metadata/:filename", akm, r.mh.Handle)
-	fc.Post("/files", akm, r.gf.Handle)
+	fc.Get("/metadata/:filename", akm, r.mh.Handle)
+	fc.Get("/files", akm, r.gf.Handle)
 	fc.Post("/file/:id/replace", akm, r.rh.Handle)
 	fc.Delete("/file/:id", akm, r.dh.Handle)
 }

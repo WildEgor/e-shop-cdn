@@ -5,7 +5,6 @@ import (
 	"github.com/WildEgor/e-shop-cdn/internal/repositories"
 	"github.com/go-co-op/gocron/v2"
 	"log/slog"
-	"time"
 )
 
 type CronService struct {
@@ -25,8 +24,11 @@ func NewCronService(fr repositories.IFilesRepository, sa adapters.IFileStorage) 
 
 func (s *CronService) Run() error {
 	_, err := s.sc.NewJob(
-		gocron.DurationJob(
-			10*time.Second,
+		gocron.DailyJob(
+			1,
+			gocron.NewAtTimes(
+				gocron.NewAtTime(22, 00, 0),
+			),
 		),
 		gocron.NewTask(s.cleanupJob),
 	)
@@ -45,14 +47,12 @@ func (s *CronService) cleanupJob() {
 	slog.Info("cron: cleanup")
 
 	for file := range s.fr.StreamDeletedFiles() {
-
-		slog.Info("delete file")
-
+		slog.Debug("delete file")
+		// TODO: check 404
 		if err := s.sa.Delete(file.Name); err != nil {
 			slog.Warn(err.Error())
 			continue
 		}
-
 		if err := s.fr.DeleteById(file.Id.Hex()); err != nil {
 			slog.Warn(err.Error())
 			return

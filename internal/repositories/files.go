@@ -103,7 +103,6 @@ func (r *FileRepository) PaginateFiles(opts *dtos.PaginationOpts) (*models.Pagin
 	for curr.Next(ctx) {
 		var el models.FileModel
 		curr.Decode(&el)
-
 		result.Data = append(result.Data, el)
 	}
 

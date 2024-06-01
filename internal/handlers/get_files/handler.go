@@ -53,7 +53,7 @@ func (h *GetFilesHandler) Handle(c *fiber.Ctx) error {
 	dto := dtos.NewPaginatedResponse(pf.Total, pf.Data)
 
 	resp.SetStatus(fiber.StatusOK)
-	resp.SetData(dto)
+	resp.SetData([]*dtos.PaginatedResponseDto{dto})
 
 	return resp.JSON()
 }
